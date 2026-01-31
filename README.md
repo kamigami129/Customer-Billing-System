@@ -69,20 +69,6 @@ The system comes with sample data:
 ### Viewing Bills
 All bills are saved to `bills.txt` and can be viewed through the Billing menu.
 
-## Sample Data
-
-### Customers:
-- ID 1: John Doe (555-0101)
-- ID 2: Jane Smith (555-0102)
-- ID 3: Bob Johnson (555-0103)
-
-### Products:
-- ID 101: Laptop ($899.99, Stock: 15)
-- ID 102: Mouse ($25.50, Stock: 50)
-- ID 103: Keyboard ($75.00, Stock: 30)
-- ID 104: Monitor ($299.99, Stock: 20)
-- ID 105: USB Cable ($12.99, Stock: 100)
-
 ## File Structure
 
 ```
