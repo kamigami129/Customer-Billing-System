@@ -1,102 +1,133 @@
 # Customer Billing System - C Programming
 
-A comprehensive command-line billing system built in C for managing customers, products, inventory, and generating invoices.
+A comprehensive command-line billing system built in C for managing customers, products, inventory, and generating invoices with Nepali Rupee pricing.
 
 ## Features
 
 ### Customer Management
-- Add new customers with contact details
-- View all customers
-- Search customers by ID
+- Register new customers with phone number
+- View registered customers
+- Remove customer records
 
 ### Product Management
-- Add new products with pricing
-- View all products
-- Update stock quantities (add/remove)
-- Search products by ID
+- Add new products with pricing (in Nepali Rupees)
+- View all products with pricing and stock levels
+- Edit product prices and stock quantities
 
-### Billing System
+### Billing & Transactions
 - Create invoices with multiple items
-- Automatic stock deduction
-- Tax calculation (10%)
+- Automatic stock deduction during checkout
+- 5% discount for registered customers
+- VAT calculation (13%)
+- Transaction history tracking
 - Professional invoice generation
-- Bill history tracking
 
 ## Compilation
 
-### Linux/Mac:
-```bash
-gcc billing_system.c -o billing_system
-./billing_system
-```
-
 ### Windows (MinGW):
 ```bash
-gcc billing_system.c -o billing_system.exe
-billing_system.exe
+gcc init_products.c -o output/init_products.exe
+output/init_products.exe
+gcc main.c -o output/main.exe
+output/main.exe
 ```
 
-### Windows (Visual Studio):
+### Linux/Mac:
 ```bash
-cl billing_system.c
-billing_system.exe
+gcc init_products.c -o init_products
+./init_products
+gcc main.c -o main
+./main
 ```
 
 ## Usage Guide
 
 ### Initial Setup
-The system comes with sample data:
-- 3 pre-loaded customers (IDs: 1, 2, 3)
-- 5 pre-loaded products (IDs: 101-105)
+First, run the initialization program to populate the database with products:
+```bash
+./init_products
+```
 
-### Creating a Bill
-1. Go to Main Menu → Billing → Create New Bill
-2. Enter Customer ID (e.g., 1 for John Doe)
-3. Enter Product ID (e.g., 101 for Laptop)
-4. Enter quantity
-5. Choose to add more items or complete the bill
-6. Invoice will be generated and saved
+Then launch the main system:
+```bash
+./main
+```
 
-### Adding New Customers
-1. Main Menu → Customer Management → Add New Customer
-2. Enter customer details (name, phone, email)
-3. Customer ID is auto-generated
+### Main Menu Options
+1. **User Login** - Admin access (username: admin, password: pass123)
+2. **Customer Login** - Customer shopping experience
+3. **Save & Exit** - Save data and close program
 
-### Managing Products
-1. Main Menu → Product Management
-2. Add products, view inventory, or update stock levels
+### Admin Functions
+- Add new products
+- Edit existing product prices and stock
+- View transaction history
+- Register new customers
+- Remove customers
+- View all products
 
-### Viewing Bills
-All bills are saved to `bills.txt` and can be viewed through the Billing menu.
+### Customer Shopping
+1. Enter phone number (or register as guest)
+2. Browse available products
+3. Add items to cart
+4. View cart contents
+5. Proceed to checkout
+6. Bill is generated with automatic discount (if registered) and VAT
 
-## Sample Data
+## Default Products (20 items)
 
-### Customers:
-- ID 1: John Doe (555-0101)
-- ID 2: Jane Smith (555-0102)
-- ID 3: Bob Johnson (555-0103)
+### Groceries & Food Items
+- Whole Wheat Bread - Rs. 389/-
+- Organic Milk (1L) - Rs. 584/-
+- Chicken Breast (1kg) - Rs. 1,169/-
+- Eggs (Dozen) - Rs. 519/-
+- Rice (2kg) - Rs. 779/-
+- Olive Oil (500ml) - Rs. 1,299/-
 
-### Products:
-- ID 101: Laptop ($899.99, Stock: 15)
-- ID 102: Mouse ($25.50, Stock: 50)
-- ID 103: Keyboard ($75.00, Stock: 30)
-- ID 104: Monitor ($299.99, Stock: 20)
-- ID 105: USB Cable ($12.99, Stock: 100)
+### Beverages
+- Orange Juice (1L) - Rs. 454/-
+- Coffee Beans (500g) - Rs. 1,559/-
+- Bottled Water (24 pack) - Rs. 649/-
+
+### Dairy & Condiments
+- Cheddar Cheese (500g) - Rs. 909/-
+- Yogurt (500g) - Rs. 454/-
+- Tomato Ketchup (500ml) - Rs. 389/-
+
+### Electronics & Home Goods
+- LED Bulb (10W) - Rs. 1,039/-
+- Phone Charger - Rs. 1,949/-
+- USB-C Cable (2m) - Rs. 1,299/-
+- Kitchen Sponge (Pack of 3) - Rs. 324/-
+- Aluminum Foil (50m) - Rs. 584/-
+
+### Personal Care
+- Toothpaste (100g) - Rs. 519/-
+- Shampoo (200ml) - Rs. 779/-
+- Hand Soap (250ml) - Rs. 389/-
 
 ## File Structure
 
 ```
-billing_system.c    - Main program
-bills.txt          - Bill history (generated when bills are created)
+main.c                - Main billing system
+init_products.c       - Database initialization program
+billing_data.dat      - Binary data file (customers, products, transactions)
+output/
+  ├── main.exe        - Main executable
+  └── init_products.exe - Initialization executable
 ```
 
 ## Technical Details
 
 - **Language**: C
 - **Max Customers**: 100
-- **Max Products**: 50
-- **Max Items per Bill**: 20
-- **Tax Rate**: 10%
+- **Max Products**: 100
+- **Max Transactions**: 200
+- **Max Cart Items**: 50
+- **Tax Rate**: 13% VAT
+- **Registered Customer Discount**: 5%
+- **Currency**: Nepali Rupees (Rs. /-)
+
 
 ## System Requirements
 
