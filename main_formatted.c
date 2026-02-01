@@ -9,57 +9,23 @@
 #define MAX_CART 50
 #define FILE_NAME "billing_data.dat"
 
-typedef struct {
-    int id;
-    char name[50];
-    char phone[15];
-    int is_registered;
-} Customer;
-
-typedef struct {
-    int id;
-    char name[40];
-    float price;
-    int stock;
-} Product;
-
-typedef struct {
-    int transaction_id;
-    char customer_phone[15];
-    char date[20];
-    float total_amount;
-    int is_registered;
-} Transaction;
-
-typedef struct {
-    int product_id;
-    int quantity;
-} CartItem;
+typedef struct { int id; char name[50], phone[15]; int is_registered; } Customer;
+typedef struct { int id; char name[40]; float price; int stock; } Product;
+typedef struct { int transaction_id; char customer_phone[15], date[20]; float total_amount; int is_registered; } Transaction;
+typedef struct { int product_id, quantity; } CartItem;
 
 Customer customers[MAX_CUSTOMERS];
 Product products[MAX_PRODUCTS];
 Transaction transactions[MAX_TRANSACTIONS];
+int customer_count = 0, product_count = 0, transaction_count = 0;
 
-int customer_count = 0;
-int product_count = 0;
-int transaction_count = 0;
-
-void clear_screen() {
-    system("clear||cls");
-}
-
-void pause_screen() {
-    printf("\nPress Enter...");
-    getchar();
-    getchar();
-}
+void clear_screen() { system("clear||cls"); }
+void pause_screen() { printf("\nPress Enter..."); getchar(); getchar(); }
 
 void get_current_datetime(char *buffer) {
     time_t now = time(NULL);
     struct tm *t = localtime(&now);
-    sprintf(buffer, "%02d/%02d/%04d %02d:%02d",
-            t->tm_mday, t->tm_mon + 1, t->tm_year + 1900,
-            t->tm_hour, t->tm_min);
+    sprintf(buffer, "%02d/%02d/%04d %02d:%02d", t->tm_mday, t->tm_mon + 1, t->tm_year + 1900, t->tm_hour, t->tm_min);
 }
 
 void load_data() {
@@ -89,26 +55,18 @@ void save_data() {
 }
 
 int find_customer_by_phone(char *phone) {
-    for (int i = 0; i < customer_count; i++) {
-        if (strcmp(customers[i].phone, phone) == 0) {
-            return i;
-        }
-    }
+    for (int i = 0; i < customer_count; i++)
+        if (strcmp(customers[i].phone, phone) == 0) return i;
     return -1;
 }
 
 int find_product(int id) {
-    for (int i = 0; i < product_count; i++) {
-        if (products[i].id == id) {
-            return i;
-        }
-    }
+    for (int i = 0; i < product_count; i++)
+        if (products[i].id == id) return i;
     return -1;
 }
 
-int generate_random_id() {
-    return 100000 + (rand() % 900000);
-}
+int generate_random_id() { return 100000 + (rand() % 900000); }
 
 void add_product() {
     clear_screen();
@@ -139,13 +97,11 @@ void edit_product() {
 
 void view_transactions() {
     clear_screen();
-    printf("\n=== TRANSACTIONS ===\n");
-    printf("%-5s %-15s %-20s %-12s %-10s\n", "ID", "Phone", "Date", "Amount", "Reg?");
+    printf("\n=== TRANSACTIONS ===\n%-5s %-15s %-20s %-12s %-10s\n", "ID", "Phone", "Date", "Amount", "Reg?");
     printf("---------------------------------------------------------------------\n");
     for (int i = 0; i < transaction_count; i++)
-        printf("%-5d %-15s %-20s Rs.%-8.2f/- %-10s\n", transactions[i].transaction_id, 
-               transactions[i].customer_phone, transactions[i].date, 
-               transactions[i].total_amount, transactions[i].is_registered ? "Yes" : "No");
+        printf("%-5d %-15s %-20s Rs.%-8.2f/- %-10s\n", transactions[i].transaction_id, transactions[i].customer_phone, 
+               transactions[i].date, transactions[i].total_amount, transactions[i].is_registered ? "Yes" : "No");
     pause_screen();
 }
 
@@ -178,17 +134,14 @@ void view_user_transactions() {
     char phone[15]; printf("Enter phone number: "); scanf("%s", phone);
     int idx = find_customer_by_phone(phone);
     if (idx == -1) { printf("User not found!\n"); pause_screen(); return; }
-    
     clear_screen();
-    printf("\n=== TRANSACTIONS FOR %s (%s) ===", customers[idx].name, phone);
-    printf("\n%-5s %-20s %-12s %-10s\n", "ID", "Date", "Amount", "Reg?");
+    printf("\n=== TRANSACTIONS FOR %s (%s) ===\n%-5s %-20s %-12s %-10s\n", customers[idx].name, phone, "ID", "Date", "Amount", "Reg?");
     printf("-------------------------------------------------------------\n");
     int found = 0;
     for (int i = 0; i < transaction_count; i++) {
         if (strcmp(transactions[i].customer_phone, phone) == 0) {
-            printf("%-5d %-20s Rs.%-8.2f/- %-10s\n", transactions[i].transaction_id, 
-                   transactions[i].date, transactions[i].total_amount, 
-                   transactions[i].is_registered ? "Yes" : "No");
+            printf("%-5d %-20s Rs.%-8.2f/- %-10s\n", transactions[i].transaction_id, transactions[i].date, 
+                   transactions[i].total_amount, transactions[i].is_registered ? "Yes" : "No");
             found = 1;
         }
     }
@@ -200,8 +153,7 @@ void users_menu() {
     int choice;
     while (1) {
         clear_screen();
-        printf("\n========================================\n         USERS MANAGEMENT\n========================================\n");
-        printf("\n  1. Register User\n  2. Remove User\n  3. View User Transactions\n  4. Back to Admin Panel\n\nChoice: ");
+        printf("\n========================================\n         USERS MANAGEMENT\n========================================\n\n  1. Register User\n  2. Remove User\n  3. View User Transactions\n  4. Back to Admin Panel\n\nChoice: ");
         scanf("%d", &choice);
         if (choice == 1) register_user();
         else if (choice == 2) remove_user();
@@ -232,8 +184,7 @@ void admin_menu() {
     int choice;
     while (1) {
         clear_screen();
-        printf("\n========================================\n         ADMIN PANEL\n========================================\n");
-        printf("\n  1. Add Product\n  2. Edit Product\n  3. View Products\n  4. Users\n  5. Logout\n\nChoice: ");
+        printf("\n========================================\n         ADMIN PANEL\n========================================\n\n  1. Add Product\n  2. Edit Product\n  3. View Products\n  4. Users\n  5. Logout\n\nChoice: ");
         scanf("%d", &choice);
         if (choice == 1) add_product();
         else if (choice == 2) edit_product();
@@ -259,16 +210,13 @@ void user_menu() {
     clear_screen();
     printf("\n=== USER CHECKOUT ===\nPhone: "); scanf("%s", phone);
     int user_idx = find_customer_by_phone(phone);
-    if (user_idx != -1) {
-        is_registered = 1;
-        printf("Welcome, %s! (5%% discount)\n", customers[user_idx].name);
-    } else printf("Welcome, Guest!\n");
+    if (user_idx != -1) { is_registered = 1; printf("Welcome, %s! (5%% discount)\n", customers[user_idx].name); }
+    else printf("Welcome, Guest!\n");
     pause_screen();
     
     while (1) {
         clear_screen();
-        printf("\n========================================\n      USER SHOPPING\n========================================\n");
-        printf("\n  1. View Products\n  2. Add to Cart\n  3. Remove from Cart\n  4. View Cart\n  5. Checkout\n  6. Exit\n\nChoice: ");
+        printf("\n========================================\n      USER SHOPPING\n========================================\n\n  1. View Products\n  2. Add to Cart\n  3. Remove from Cart\n  4. View Cart\n  5. Checkout\n  6. Exit\n\nChoice: ");
         scanf("%d", &choice);
         
         if (choice == 1) {
@@ -276,8 +224,7 @@ void user_menu() {
             printf("\n=== PRODUCTS ===\n%-5s %-30s %-10s %-10s\n", "ID", "Name", "Price", "Stock");
             printf("-----------------------------------------------------------\n");
             for (int i = 0; i < product_count; i++)
-                if (products[i].stock > 0)
-                    printf("%-5d %-30s Rs.%-6.2f/- (%d)\n", products[i].id, products[i].name, products[i].price, products[i].stock);
+                if (products[i].stock > 0) printf("%-5d %-30s Rs.%-6.2f/- (%d)\n", products[i].id, products[i].name, products[i].price, products[i].stock);
             pause_screen();
         }
         else if (choice == 2) {
@@ -289,14 +236,12 @@ void user_menu() {
             printf("Quantity: "); scanf("%d", &qty);
             if (qty > products[idx].stock) { printf("Insufficient stock!\n"); pause_screen(); continue; }
             cart[cart_count].product_id = prod_id;
-            cart[cart_count].quantity = qty;
-            cart_count++;
+            cart[cart_count++].quantity = qty;
             printf("Added!\n"); pause_screen();
         }
         else if (choice == 3) {
-            if (cart_count == 0) { printf("Cart empty!\n"); pause_screen(); continue; }
-            int prod_id; printf("Product ID: "); scanf("%d", &prod_id);
-            int found = 0;
+            if (!cart_count) { printf("Cart empty!\n"); pause_screen(); continue; }
+            int prod_id, found = 0; printf("Product ID: "); scanf("%d", &prod_id);
             for (int i = 0; i < cart_count; i++) {
                 if (cart[i].product_id == prod_id) {
                     for (int j = i; j < cart_count - 1; j++) cart[j] = cart[j + 1];
@@ -309,27 +254,24 @@ void user_menu() {
         else if (choice == 4) {
             clear_screen();
             printf("\n=== CART ===\n");
-            if (cart_count == 0) printf("Empty!\n");
+            if (!cart_count) printf("Empty!\n");
             else {
                 printf("%-30s %-8s %-10s %-10s\n", "Product", "Qty", "Price", "Subtotal");
                 printf("--------------------------------------------------------------\n");
                 for (int i = 0; i < cart_count; i++) {
                     int idx = find_product(cart[i].product_id);
-                    printf("%-30s %-8d Rs.%-6.2f/- Rs.%-8.2f/-\n", products[idx].name, cart[i].quantity, 
-                           products[idx].price, products[idx].price * cart[i].quantity);
+                    printf("%-30s %-8d Rs.%-6.2f/- Rs.%-8.2f/-\n", products[idx].name, cart[i].quantity, products[idx].price, products[idx].price * cart[i].quantity);
                 }
             }
             pause_screen();
         }
         else if (choice == 5) {
-            if (cart_count == 0) { printf("Cart empty!\n"); pause_screen(); continue; }
+            if (!cart_count) { printf("Cart empty!\n"); pause_screen(); continue; }
             clear_screen();
-            printf("\n============================================================\n                 FINAL BILL\n============================================================\n");
-            printf("\nPhone: %s\n", phone);
+            printf("\n============================================================\n                 FINAL BILL\n============================================================\n\nPhone: %s\n", phone);
             if (is_registered) printf("Status: REGISTERED (5%% Discount)\n");
             char datetime[20]; get_current_datetime(datetime);
-            printf("Date: %s\n\n", datetime);
-            printf("%-30s %-8s %-10s %-12s\n", "Product", "Qty", "Price", "Subtotal");
+            printf("Date: %s\n\n%-30s %-8s %-10s %-12s\n", datetime, "Product", "Qty", "Price", "Subtotal");
             printf("----------------------------------------------------------------\n");
             float total = 0;
             for (int i = 0; i < cart_count; i++) {
@@ -339,25 +281,17 @@ void user_menu() {
                 total += subtotal;
                 products[idx].stock -= cart[i].quantity;
             }
-            printf("----------------------------------------------------------------\n");
-            printf("%51s Rs.%-8.2f/-\n", "Subtotal:", total);
+            printf("----------------------------------------------------------------\n%51s Rs.%-8.2f/-\n", "Subtotal:", total);
             if (is_registered) {
                 float discount = total * 0.05;
                 printf("%51s -Rs.%-7.2f/-\n", "Discount (5%):", discount);
                 total -= discount;
             }
             float vat = total * 0.13;
-            printf("%51s Rs.%-8.2f/-\n", "VAT (13%):", vat);
-            total += vat;
-            printf("================================================================\n");
-            printf("%51s Rs.%-8.2f/-\n", "FINAL TOTAL:", total);
-            printf("================================================================\n");
-            Transaction t;
-            t.transaction_id = transaction_count + 1;
+            printf("%51s Rs.%-8.2f/-\n================================================================\n%51s Rs.%-8.2f/-\n================================================================\n", "VAT (13%):", vat, "FINAL TOTAL:", total + vat);
+            Transaction t = {transaction_count + 1, "", "", total + vat, is_registered};
             strcpy(t.customer_phone, phone);
             strcpy(t.date, datetime);
-            t.total_amount = total;
-            t.is_registered = is_registered;
             transactions[transaction_count++] = t;
             printf("\nThank you!\n"); pause_screen(); return;
         }
@@ -372,8 +306,7 @@ int main() {
     int choice;
     while (1) {
         clear_screen();
-        printf("\n========================================\n   CUSTOMER BILLING SYSTEM\n========================================\n");
-        printf("\n  1. Admin Login\n  2. User Login\n  3. Save & Exit\n\nChoice: ");
+        printf("\n========================================\n   CUSTOMER BILLING SYSTEM\n========================================\n\n  1. Admin Login\n  2. User Login\n  3. Save & Exit\n\nChoice: ");
         scanf("%d", &choice);
         if (choice == 1) { if (admin_login()) admin_menu(); }
         else if (choice == 2) user_menu();
