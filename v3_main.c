@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <ctype.h>
 
 #define MAX_CUSTOMERS 100
 #define MAX_PRODUCTS 100
@@ -66,6 +67,13 @@ int find_product(int id) {
     return -1;
 }
 
+int find_product_by_name(char *name) {
+    for (int i = 0; i < product_count; i++) {
+        if (strcasecmp(products[i].name, name) == 0) return i;
+    }
+    return -1;
+}
+
 int generate_random_id() { return 100000 + (rand() % 900000); }
 
 void add_product() {
@@ -107,7 +115,7 @@ void view_transactions() {
 
 void register_user() {
     clear_screen();
-    printf("\n=== REGISTER USER ===");
+    printf("\n=== REGISTER USER ===\n");
     if (customer_count >= MAX_CUSTOMERS) { printf("Limit reached!\n"); pause_screen(); return; }
     Customer c; c.id = generate_random_id(); c.is_registered = 1;
     printf("Name: "); scanf(" %[^\n]", c.name);
@@ -119,7 +127,7 @@ void register_user() {
 
 void remove_user() {
     clear_screen();
-    printf("\n=== REMOVE USER ===");
+    printf("\n=== REMOVE USER ===\n");
     char phone[15]; printf("Phone: "); scanf("%s", phone);
     int idx = find_customer_by_phone(phone);
     if (idx == -1) { printf("Not found!\n"); pause_screen(); return; }
@@ -130,37 +138,44 @@ void remove_user() {
 
 void view_user_transactions() {
     clear_screen();
-    printf("\n=== VIEW USER TRANSACTIONS ===");
+    printf("\n=== VIEW USER TRANSACTIONS ===\n");
     char phone[15]; printf("Enter phone number: "); scanf("%s", phone);
-    int idx = find_customer_by_phone(phone);
-    if (idx == -1) { printf("User not found!\n"); pause_screen(); return; }
-    clear_screen();
-    printf("\n=== TRANSACTIONS FOR %s (%s) ===\n%-5s %-20s %-12s %-10s\n", customers[idx].name, phone, "ID", "Date", "Amount", "Reg?");
-    printf("-------------------------------------------------------------\n");
+    
+    // Check if this phone has any transactions (registered or guest)
     int found = 0;
+    for (int i = 0; i < transaction_count; i++) {
+        if (strcmp(transactions[i].customer_phone, phone) == 0) {
+            found = 1;
+            break;
+        }
+    }
+    
+    if (!found) { 
+        printf("No transactions found for this phone number!\n"); 
+        pause_screen(); 
+        return; 
+    }
+    
+    // Get customer name if registered, otherwise show as Guest
+    int idx = find_customer_by_phone(phone);
+    char display_name[60];
+    if (idx != -1) {
+        strcpy(display_name, customers[idx].name);
+    } else {
+        strcpy(display_name, "Guest User");
+    }
+    
+    clear_screen();
+    printf("\n=== TRANSACTIONS FOR %s (%s) ===\n%-5s %-20s %-12s %-10s\n", display_name, phone, "ID", "Date", "Amount", "Reg?");
+    printf("-------------------------------------------------------------\n");
+    
     for (int i = 0; i < transaction_count; i++) {
         if (strcmp(transactions[i].customer_phone, phone) == 0) {
             printf("%-5d %-20s Rs.%-8.2f/- %-10s\n", transactions[i].transaction_id, transactions[i].date, 
                    transactions[i].total_amount, transactions[i].is_registered ? "Yes" : "No");
-            found = 1;
         }
     }
-    if (!found) printf("No transactions found!\n");
     pause_screen();
-}
-
-void users_menu() {
-    int choice;
-    while (1) {
-        clear_screen();
-        printf("\n========================================\n         USERS MANAGEMENT\n========================================\n\n  1. Register User\n  2. Remove User\n  3. View User Transactions\n  4. Back to Admin Panel\n\nChoice: ");
-        scanf("%d", &choice);
-        if (choice == 1) register_user();
-        else if (choice == 2) remove_user();
-        else if (choice == 3) view_user_transactions();
-        else if (choice == 4) return;
-        else { printf("\nInvalid!\n"); pause_screen(); }
-    }
 }
 
 int admin_login() {
@@ -180,6 +195,21 @@ int admin_login() {
     printf("\nAccess denied!\n"); pause_screen(); return 0;
 }
 
+void admin_users_menu() {
+    int choice;
+    while (1) {
+        clear_screen();
+        printf("\n========================================\n         USERS MANAGEMENT\n========================================\n");
+        printf("\n  1. Register User\n  2. Remove User\n  3. View User Transactions\n  4. Back to Admin Panel\n\nChoice: ");
+        scanf("%d", &choice);
+        if (choice == 1) register_user();
+        else if (choice == 2) remove_user();
+        else if (choice == 3) view_user_transactions();
+        else if (choice == 4) return;
+        else { printf("\nInvalid!\n"); pause_screen(); }
+    }
+}
+
 void admin_menu() {
     int choice;
     while (1) {
@@ -196,7 +226,7 @@ void admin_menu() {
                 printf("%-5d %-30s Rs.%-6.2f/- (%d)\n", products[i].id, products[i].name, products[i].price, products[i].stock);
             pause_screen();
         }
-        else if (choice == 4) users_menu();
+        else if (choice == 4) admin_users_menu();
         else if (choice == 5) return;
         else { printf("\nInvalid!\n"); pause_screen(); }
     }
@@ -205,13 +235,43 @@ void admin_menu() {
 void user_menu() {
     CartItem cart[MAX_CART];
     int cart_count = 0, choice, is_registered = 0;
-    char phone[15];
+    char phone[15], prod_name[40], reg_choice;
     
     clear_screen();
     printf("\n=== USER CHECKOUT ===\nPhone: "); scanf("%s", phone);
     int user_idx = find_customer_by_phone(phone);
-    if (user_idx != -1) { is_registered = 1; printf("Welcome, %s! (5%% discount)\n", customers[user_idx].name); }
-    else printf("Welcome, Guest!\n");
+    if (user_idx != -1) { 
+        is_registered = 1; 
+        printf("Welcome, %s! (5%% discount)\n", customers[user_idx].name); 
+    }
+    else {
+        printf("Welcome, Guest!\nDo You wish to Register (y/n): ");
+        scanf(" %c", &reg_choice);
+        reg_choice = toupper(reg_choice);
+        switch (reg_choice) {
+            case 'Y':
+                if (customer_count >= MAX_CUSTOMERS) { 
+                    printf("Customer limit reached! Continuing as guest...\n"); 
+                    break; 
+                }
+                Customer c; 
+                c.id = generate_random_id(); 
+                c.is_registered = 1;
+                printf("Name: "); 
+                scanf(" %[^\n]", c.name);
+                strcpy(c.phone, phone);  // Use the phone number already entered
+                customers[customer_count++] = c;
+                is_registered = 1;
+                printf("\nRegistered! User ID: %d (5%% discount applied)\n", c.id);
+                break;
+            case 'N': 
+                printf("Continuing as guest...\n"); 
+                break;
+            default: 
+                printf("Invalid Input.... Continuing as guest...\n");
+                break;
+        }
+    }
     pause_screen();
     
     while (1) {
@@ -229,19 +289,25 @@ void user_menu() {
         }
         else if (choice == 2) {
             if (cart_count >= MAX_CART) { printf("Cart full!\n"); pause_screen(); continue; }
-            int prod_id, qty;
-            printf("Product ID: "); scanf("%d", &prod_id);
-            int idx = find_product(prod_id);
+            int qty;
+            printf("\n=== PRODUCTS ===\n%-5s %-30s %-10s %-10s\n", "ID", "Name", "Price", "Stock");
+            printf("-----------------------------------------------------------\n");
+            for (int i = 0; i < product_count; i++)
+                if (products[i].stock > 0) printf("%-5d %-30s Rs.%-6.2f/- (%d)\n", products[i].id, products[i].name, products[i].price, products[i].stock);
+            
+            printf("\nProduct Name: "); scanf(" %[^\n]", prod_name);
+            int idx = find_product_by_name(prod_name);
             if (idx == -1) { printf("Not found!\n"); pause_screen(); continue; }
             printf("Quantity: "); scanf("%d", &qty);
             if (qty > products[idx].stock) { printf("Insufficient stock!\n"); pause_screen(); continue; }
-            cart[cart_count].product_id = prod_id;
+            cart[cart_count].product_id = products[idx].id;
             cart[cart_count++].quantity = qty;
             printf("Added!\n"); pause_screen();
         }
         else if (choice == 3) {
             if (!cart_count) { printf("Cart empty!\n"); pause_screen(); continue; }
-            int prod_id, found = 0; printf("Product ID: "); scanf("%d", &prod_id);
+            int prod_id, found = 0; 
+            printf("Product ID: "); scanf("%d", &prod_id);
             for (int i = 0; i < cart_count; i++) {
                 if (cart[i].product_id == prod_id) {
                     for (int j = i; j < cart_count - 1; j++) cart[j] = cart[j + 1];
@@ -270,6 +336,7 @@ void user_menu() {
             clear_screen();
             printf("\n============================================================\n                 FINAL BILL\n============================================================\n\nPhone: %s\n", phone);
             if (is_registered) printf("Status: REGISTERED (5%% Discount)\n");
+            else printf("Status: GUEST\n");
             char datetime[20]; get_current_datetime(datetime);
             printf("Date: %s\n\n%-30s %-8s %-10s %-12s\n", datetime, "Product", "Qty", "Price", "Subtotal");
             printf("----------------------------------------------------------------\n");

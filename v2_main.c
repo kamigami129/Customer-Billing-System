@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <ctype.h>
 
 #define MAX_CUSTOMERS 100
 #define MAX_PRODUCTS 100
@@ -106,6 +107,50 @@ int find_product(int id) {
     return -1;
 }
 
+void to_lowercase(char *str, char *result) {
+    int i = 0;
+    while (str[i]) {
+        result[i] = tolower(str[i]);
+        i++;
+    }
+    result[i] = '\0';
+}
+void search_products_by_name(char *search_term) {
+    char lower_search[40], lower_name[40];
+    to_lowercase(search_term, lower_search);
+    
+    printf("\n=== SEARCH RESULTS ===\n");
+    printf("%-5s %-30s %-10s %-10s\n", "ID", "Name", "Price", "Stock");
+    printf("-----------------------------------------------------------\n");
+    
+    int found = 0;
+    for (int i = 0; i < product_count; i++) {
+        to_lowercase(products[i].name, lower_name);
+        if (strstr(lower_name, lower_search) != NULL) {
+            printf("%-5d %-30s Rs.%-6.2f/- (%d)\n", 
+                   products[i].id, products[i].name, 
+                   products[i].price, products[i].stock);
+            found = 1;
+        }
+    }
+    
+    if (!found) {
+        printf("No products found matching '%s'\n", search_term);
+    }
+}
+int find_product_by_name_exact(char *name) {
+    char lower_search[40], lower_name[40];
+    to_lowercase(name, lower_search);
+    
+    for (int i = 0; i < product_count; i++) {
+        to_lowercase(products[i].name, lower_name);
+        if (strcmp(lower_name, lower_search) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 int generate_random_id() {
     return 100000 + (rand() % 900000);
 }
@@ -126,15 +171,79 @@ void add_product() {
 void edit_product() {
     clear_screen();
     printf("\n=== EDIT PRODUCT ===\n");
-    int id; printf("Product ID: "); scanf("%d", &id);
-    int idx = find_product(id);
-    if (idx == -1) { printf("Not found!\n"); pause_screen(); return; }
-    printf("Current: %s | Rs.%.2f/- | Stock: %d\n", products[idx].name, products[idx].price, products[idx].stock);
-    float new_price; printf("New price (0 to skip): Rs."); scanf("%f", &new_price);
+    printf("Search by: \n");
+    printf("  1. Product ID\n");
+    printf("  2. Product Name\n");
+    printf("Choice: ");
+    
+    int search_choice;
+    scanf("%d", &search_choice);
+    
+    int idx = -1;
+    
+    if (search_choice == 1) {
+        int id;
+        printf("Enter Product ID: ");
+        scanf("%d", &id);
+        idx = find_product(id);
+    } 
+    else if (search_choice == 2) {
+        char search_name[40];
+        printf("Enter Product Name: ");
+        scanf(" %[^\n]", search_name);
+        idx = find_product_by_name_exact(search_name);
+        
+        if (idx == -1) {
+            printf("\nExact match not found. Showing similar products:\n");
+            search_products_by_name(search_name);
+            printf("\nTry again with exact name or ID.\n");
+            pause_screen();
+            return;
+        }
+    }
+    else {
+        printf("Invalid choice!\n");
+        pause_screen();
+        return;
+    }
+    
+    if (idx == -1) {
+        printf("Product not found!\n");
+        pause_screen();
+        return;
+    }
+    
+    printf("\n--- Product Found ---\n");
+    printf("ID: %d\n", products[idx].id);
+    printf("Name: %s\n", products[idx].name);
+    printf("Price: Rs.%.2f/-\n", products[idx].price);
+    printf("Stock: %d\n", products[idx].stock);
+    printf("--------------------\n");
+    
+    float new_price;
+    printf("\nNew price (0 to skip): Rs.");
+    scanf("%f", &new_price);
     if (new_price > 0) products[idx].price = new_price;
-    int new_stock; printf("New stock (-1 to skip): "); scanf("%d", &new_stock);
+    
+    int new_stock;
+    printf("New stock (-1 to skip): ");
+    scanf("%d", &new_stock);
     if (new_stock >= 0) products[idx].stock = new_stock;
-    printf("\nUpdated!\n"); pause_screen();
+    
+    printf("\nProduct updated successfully!\n");
+    pause_screen();
+}
+
+// NEW FUNCTION: Search products menu for admin
+void search_products_menu() {
+    clear_screen();
+    printf("\n=== SEARCH PRODUCTS ===\n");
+    char search_term[40];
+    printf("Enter product name (or part of it): ");
+    scanf(" %[^\n]", search_term);
+    
+    search_products_by_name(search_term);
+    pause_screen();
 }
 
 void view_transactions() {
@@ -190,7 +299,7 @@ void view_user_transactions() {
                    transactions[i].date, transactions[i].total_amount, 
                    transactions[i].is_registered ? "Yes" : "No");
             found = 1;
-        }
+        } 
     }
     if (!found) printf("No transactions found!\n");
     pause_screen();
@@ -228,12 +337,13 @@ int admin_login() {
     printf("\nAccess denied!\n"); pause_screen(); return 0;
 }
 
+// MODIFIED FUNCTION: Admin menu with search option
 void admin_menu() {
     int choice;
     while (1) {
         clear_screen();
         printf("\n========================================\n         ADMIN PANEL\n========================================\n");
-        printf("\n  1. Add Product\n  2. Edit Product\n  3. View Products\n  4. Users\n  5. Logout\n\nChoice: ");
+        printf("\n  1. Add Product\n  2. Edit Product\n  3. View All Products\n  4. Search Products\n  5. Users\n  6. Logout\n\nChoice: ");
         scanf("%d", &choice);
         if (choice == 1) add_product();
         else if (choice == 2) edit_product();
@@ -245,8 +355,9 @@ void admin_menu() {
                 printf("%-5d %-30s Rs.%-6.2f/- (%d)\n", products[i].id, products[i].name, products[i].price, products[i].stock);
             pause_screen();
         }
-        else if (choice == 4) users_menu();
-        else if (choice == 5) return;
+        else if (choice == 4) search_products_menu();
+        else if (choice == 5) users_menu();
+        else if (choice == 6) return;
         else { printf("\nInvalid!\n"); pause_screen(); }
     }
 }
